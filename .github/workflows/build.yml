@@ -1,0 +1,42 @@
+name: Build Windows EXE
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: pip install pyinstaller pandas openpyxl
+      
+      - name: Build EXE
+        run: |
+          pyinstaller --onefile `
+            --name "电商订单发货工具" `
+            --add-data "modules;modules" `
+            --hidden-import pandas `
+            --hidden-import openpyxl `
+            --console `
+            scripts/process.py
+      
+      - name: Prepare package
+        run: |
+          mkdir 交付包
+          copy dist\电商订单发货工具.exe 交付包\
+          mkdir 交付包\input
+          mkdir 交付包\output
+      
+      - uses: actions/upload-artifact@v4
+        with:
+          name: demo2-delivery
+          path: 交付包/
+          retention-days: 90
